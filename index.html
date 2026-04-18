@@ -105,42 +105,10 @@
       return "luminosos";
     };
 
-    const CEFR_DICT = {
-      eloquent: { pt: "eloquente", lvl: "B2", tip: "Descreve alguém que fala muito bem. Sinônimos: articulate, fluent." },
-      articulate: { pt: "articulado, claro ao falar", lvl: "B2", tip: "Usado para quem expressa ideias com clareza." },
-      reckoning: { pt: "ajuste de contas, reflexão", lvl: "C1", tip: "Sentido figurado frequente: 'a day of reckoning'." },
-      breath: { pt: "respiração, fôlego", lvl: "A2", tip: "Básico, mas veja 'breathe' (verbo) e 'breathless' (adjetivo)." },
-      ponder: { pt: "ponderar, refletir", lvl: "B2", tip: "Mais formal que 'think about'." },
-      sublime: { pt: "sublime", lvl: "C1", tip: "Alto registro; usado em crítica de arte e literatura." },
-      overwhelming: { pt: "avassalador, esmagador", lvl: "B2", tip: "Pode ser positivo ('overwhelming joy') ou negativo." },
-      grief: { pt: "luto, pesar profundo", lvl: "B2", tip: "Mais forte que 'sadness'; associado a perda." },
-      solace: { pt: "consolo, conforto", lvl: "C1", tip: "Formal/literário. 'To find solace in...'" },
-      resilience: { pt: "resiliência", lvl: "B2", tip: "Muito usado em contextos psicológicos e sociais." },
-      endeavour: { pt: "esforço, empenho", lvl: "C1", tip: "Grafia britânica; americana é 'endeavor'." },
-      endeavor: { pt: "esforço, empenho", lvl: "C1", tip: "Grafia americana; britânica é 'endeavour'." },
-      acknowledge: { pt: "reconhecer, admitir", lvl: "B2", tip: "Mais formal que 'admit'." },
-      profound: { pt: "profundo (figurado)", lvl: "B2", tip: "Use para ideias/sentimentos, não para piscinas." },
-      inherent: { pt: "inerente, intrínseco", lvl: "C1", tip: "'Inherent to/in something'." },
-      compelling: { pt: "convincente, cativante", lvl: "B2", tip: "'A compelling argument'." },
-      acquiesce: { pt: "consentir, concordar relutantemente", lvl: "C2", tip: "Muito formal." },
-      ephemeral: { pt: "efêmero", lvl: "C1", tip: "Literário. Sinônimo: fleeting, transient." },
-      ubiquitous: { pt: "ubíquo, onipresente", lvl: "C1", tip: "'Smartphones are ubiquitous'." },
-      meticulous: { pt: "meticuloso", lvl: "B2", tip: "Positivo: cuidadoso com detalhes." },
-      nuance: { pt: "nuance, sutileza", lvl: "B2", tip: "'The nuances of the argument'." },
-      poignant: { pt: "pungente, comovente", lvl: "C1", tip: "Usado para arte, momentos, memórias." },
-      resonate: { pt: "ressoar, repercutir", lvl: "B2", tip: "Figurado: 'Her words resonated with me'." },
-      scrutiny: { pt: "escrutínio, exame atento", lvl: "C1", tip: "'Under public scrutiny'." },
-      tenacious: { pt: "tenaz, persistente", lvl: "C1", tip: "Positivo: não desiste fácil." },
-      vivid: { pt: "vívido, nítido", lvl: "B2", tip: "'A vivid memory', 'vivid colours'." },
-      whimsical: { pt: "caprichoso, fantasioso", lvl: "C1", tip: "Positivo: charmoso e imprevisível." },
-      yearn: { pt: "ansiar, almejar", lvl: "C1", tip: "'To yearn for something/someone'." },
-      candid: { pt: "sincero, franco", lvl: "B2", tip: "Cuidado: falso cognato de 'cândido'." },
-      daunting: { pt: "intimidador, assustador", lvl: "B2", tip: "'A daunting task'." },
-      earnest: { pt: "sério, sincero", lvl: "B2", tip: "'In earnest' = pra valer." },
-      fleeting: { pt: "fugaz, passageiro", lvl: "C1", tip: "'A fleeting moment'." },
-      gratitude: { pt: "gratidão", lvl: "B1", tip: "Mais formal que 'thanks'." },
-      humility: { pt: "humildade", lvl: "B2", tip: "Virtude clássica; oposto: arrogance." },
-      intricate: { pt: "intrincado, complexo", lvl: "B2", tip: "'Intricate details'." },
+    // Links para dicionários externos (usados na seção Leitura)
+    const DICT_URLS = {
+      cambridge: (w) => `https://dictionary.cambridge.org/dictionary/english-portuguese/${encodeURIComponent(w)}`,
+      linguee: (w) => `https://www.linguee.com/english-portuguese/search?query=${encodeURIComponent(w)}`,
     };
 
     const FRASES = [
@@ -197,30 +165,99 @@
       const [dark, setDark] = useLocal("dark", false);
       const [tab, setTab] = useState("dashboard");
 
-      const [rosario, setRosario] = useLocal("rosario", { historico: {}, streak: 0, ultimaData: null });
+      const [rosario, setRosario] = useLocal("rosario", { historico: {}, streak: 0, ultimaData: null, ultimaVerificacao: null });
       const [piano, setPiano] = useLocal("piano", {
         peca: "",
         hoje: { data: hoje(), blocos: [false,false,false,false], notas: ["","","",""] },
         historico: [],
       });
       const [leitura, setLeitura] = useLocal("leitura", {
-        livro: "", tempoHoje: 0, pagina: "", completouHoje: false, palavras: [], historico: [],
+        livro: "", tempoHoje: 0, pagina: "", completouHoje: false,
+        dataAtual: hoje(), historico: [],
       });
-      const [agua, setAgua] = useLocal("agua", { meta: 2000, ingestoes: [], data: hoje() });
+      const [agua, setAgua] = useLocal("agua", { meta: 2000, ingestoes: [], data: hoje(), historico: [] });
       const [exercicio, setExercicio] = useLocal("exercicio", { historico: [], streak: 0, ultimaData: null });
 
-      // Reset piano se virou o dia
-      useEffect(() => {
-        if (piano.hoje.data !== hoje()) {
-          setPiano((p) => ({
+      // ═══════ RESET DIÁRIO ROBUSTO ═══════
+      // Verifica virada de dia em TODAS as seções, toda vez que roda.
+      // Executa: (1) ao montar; (2) a cada 60s; (3) quando a aba volta ao foco.
+      const verificarViradaDeDia = () => {
+        const d = hoje();
+
+        // PIANO — arquiva o dia e reseta blocos/notas
+        setPiano((p) => {
+          if (p.hoje.data === d) return p;
+          const diaAntigo = { ...p.hoje };
+          const temConteudo = diaAntigo.blocos.some(Boolean);
+          return {
             ...p,
-            historico: [{ ...p.hoje }, ...p.historico].slice(0, 30),
-            hoje: { data: hoje(), blocos: [false,false,false,false], notas: ["","","",""] },
-          }));
-        }
-        if (agua.data !== hoje()) {
-          setAgua((a) => ({ ...a, data: hoje(), ingestoes: [] }));
-        }
+            historico: temConteudo ? [diaAntigo, ...p.historico].slice(0, 30) : p.historico,
+            hoje: { data: d, blocos: [false,false,false,false], notas: ["","","",""] },
+          };
+        });
+
+        // ÁGUA — arquiva ingestões do dia anterior no histórico e reseta
+        setAgua((a) => {
+          if (a.data === d) return a;
+          const totalOntem = a.ingestoes.reduce((t, i) => t + i.ml, 0);
+          const histOntem = a.ingestoes.length > 0
+            ? [{ data: a.data, total: totalOntem, meta: a.meta }, ...(a.historico || [])].slice(0, 30)
+            : (a.historico || []);
+          return { ...a, data: d, ingestoes: [], historico: histOntem };
+        });
+
+        // LEITURA — arquiva o dia e reseta tempo/página/checkbox. Livro permanece.
+        setLeitura((l) => {
+          if (l.dataAtual === d) return l;
+          const teveLeitura = l.tempoHoje > 0 || l.completouHoje;
+          const histOntem = teveLeitura && l.dataAtual
+            ? [{ data: l.dataAtual, livro: l.livro, tempo: l.tempoHoje, pagina: l.pagina, completou: l.completouHoje }, ...(l.historico || [])].slice(0, 30)
+            : (l.historico || []);
+          return {
+            ...l,
+            dataAtual: d,
+            tempoHoje: 0,
+            pagina: "",
+            completouHoje: false,
+            historico: histOntem,
+          };
+        });
+
+        // ROSÁRIO — o histórico é indexado por data, então só precisa garantir que a nota do dia anterior não apareça no campo de hoje. Isso é resolvido na própria seção Rosário, que lê sempre state.historico[hoje()].
+        // Nada a fazer aqui além de garantir streak atualizado quando o dia muda:
+        setRosario((r) => {
+          if (r.ultimaVerificacao === d) return r;
+          // Recalcula streak (se perdeu um dia, zera na lógica normal)
+          let streak = 0;
+          const dt = new Date();
+          while (true) {
+            const iso = dt.toISOString().slice(0, 10);
+            if (r.historico[iso]?.feito) { streak++; dt.setDate(dt.getDate() - 1); }
+            else break;
+          }
+          return { ...r, streak, ultimaVerificacao: d };
+        });
+      };
+
+      // Roda ao montar
+      useEffect(() => { verificarViradaDeDia(); }, []);
+
+      // Roda a cada 60 segundos (detecta virada enquanto app está aberto)
+      useEffect(() => {
+        const i = setInterval(verificarViradaDeDia, 60000);
+        return () => clearInterval(i);
+      }, []);
+
+      // Roda quando a aba volta ao foco (usuário abre o app de novo depois de horas)
+      useEffect(() => {
+        const onFocus = () => verificarViradaDeDia();
+        const onVisible = () => { if (!document.hidden) verificarViradaDeDia(); };
+        window.addEventListener("focus", onFocus);
+        document.addEventListener("visibilitychange", onVisible);
+        return () => {
+          window.removeEventListener("focus", onFocus);
+          document.removeEventListener("visibilitychange", onVisible);
+        };
       }, []);
 
       const theme = dark
@@ -403,9 +440,23 @@
     // ────────── ROSÁRIO ──────────
     function Rosario({ theme, state, setState }) {
       const sugerido = misterioDoDia();
+      const [dataRef, setDataRef] = useState(hoje());
       const [tipo, setTipo] = useState(state.historico[hoje()]?.tipo || sugerido);
       const [nota, setNota] = useState(state.historico[hoje()]?.nota || "");
       const feito = state.historico[hoje()]?.feito || false;
+
+      // Se a data mudou enquanto o componente está montado, reseta os campos para o dia atual
+      useEffect(() => {
+        const i = setInterval(() => {
+          const d = hoje();
+          if (d !== dataRef) {
+            setDataRef(d);
+            setTipo(state.historico[d]?.tipo || misterioDoDia());
+            setNota(state.historico[d]?.nota || "");
+          }
+        }, 30000);
+        return () => clearInterval(i);
+      }, [dataRef, state.historico]);
 
       const marcar = () => {
         setState(s => {
@@ -716,33 +767,34 @@
 
     // ────────── LEITURA ──────────
     function Leitura({ theme, state, setState }) {
-      const [trecho, setTrecho] = useState("");
-      const [resultado, setResultado] = useState(null);
+      const [palavra, setPalavra] = useState("");
 
-      const analisar = () => {
-        const palavras = trecho.toLowerCase().replace(/[^\p{L}\s']/gu, " ").split(/\s+/).filter(Boolean);
-        const encontradas = [];
-        const vistas = new Set();
-        for (const p of palavras) {
-          if (CEFR_DICT[p] && !vistas.has(p)) {
-            vistas.add(p);
-            encontradas.push({ word: p, ...CEFR_DICT[p], data: hoje() });
-          }
-        }
-        setResultado(encontradas);
-        setState(s => {
-          const chaves = new Set(s.palavras.map(p => p.word + p.data));
-          const novas = encontradas.filter(p => !chaves.has(p.word + p.data));
-          return { ...s, palavras: [...novas, ...s.palavras].slice(0, 100) };
-        });
+      const abrirCambridge = () => {
+        if (!palavra.trim()) return;
+        window.open(DICT_URLS.cambridge(palavra.trim().toLowerCase()), "_blank");
+      };
+      const abrirLinguee = () => {
+        if (!palavra.trim()) return;
+        window.open(DICT_URLS.linguee(palavra.trim().toLowerCase()), "_blank");
       };
 
-      const corNivel = (lvl) => ({ A1:"#9AC5E8",A2:"#7FB3DF",B1:"#5EA1D6",B2:"#3F8FCC",C1:"#1E6FB8",C2:"#0B4F96" }[lvl] || theme.accent);
-      const palavrasRecentes = state.palavras.slice(0, 10);
+      const ontem = (state.historico || [])[0];
 
       return (
         <div className="space-y-5">
-          <Titulo theme={theme} serifTxt="Leitura em Inglês" legenda="Vocabulário e compreensão" />
+          <Titulo theme={theme} serifTxt="Leitura em Inglês" legenda="Registro diário · consulta externa" />
+
+          {/* MOSTRADOR DE ONTEM */}
+          {ontem && (
+            <div className="rounded-xl p-3 text-xs" style={{ background: theme.accentSoft, color: theme.textDim }}>
+              <span className="uppercase tracking-wider font-semibold" style={{ color: theme.accent }}>ontem: </span>
+              {ontem.tempo > 0 && <span>{ontem.tempo} min</span>}
+              {ontem.livro && <span> · {ontem.livro}</span>}
+              {ontem.pagina && <span> · {ontem.pagina}</span>}
+              {ontem.completou && <span> · ✓ concluído</span>}
+              {!ontem.tempo && !ontem.completou && <span>sem registro</span>}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-3">
             <div>
@@ -770,35 +822,32 @@
             </div>
           </div>
 
+          {/* CONSULTA DE PALAVRAS — HONESTA */}
           <div className="rounded-xl p-4" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
             <div className="flex items-center gap-2 mb-2">
               <ILang size={16} style={{ color: theme.accent }} />
-              <span className="text-xs uppercase tracking-[0.2em]" style={{ color: theme.textDim }}>Tradutor CEFR</span>
+              <span className="text-xs uppercase tracking-[0.2em]" style={{ color: theme.textDim }}>Consulta rápida</span>
             </div>
-            <textarea value={trecho} onChange={(e) => setTrecho(e.target.value)} rows={4}
-              placeholder="Paste a paragraph from your book here..."
-              className="w-full p-3 rounded-lg text-sm focus:outline-none"
-              style={{ background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text, resize: "vertical" }} />
-            <button onClick={analisar} disabled={!trecho.trim()}
-              className="mt-2 w-full py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 transition"
-              style={{ background: theme.accent, color: "#fff" }}>
-              Analisar palavras
-            </button>
-
-            {resultado && resultado.length === 0 && (
-              <div className="mt-3 text-sm text-center py-3" style={{ color: theme.textDim }}>
-                Nenhuma palavra "difícil" reconhecida neste trecho. Ótimo sinal — você está lendo com fluência.
-              </div>
-            )}
-
-            {resultado && resultado.length > 0 && (
-              <div className="mt-3 space-y-2 fade-in">
-                <div className="text-xs" style={{ color: theme.textDim }}>
-                  {resultado.length} {resultado.length === 1 ? "palavra encontrada" : "palavras encontradas"}:
-                </div>
-                {resultado.map((p,i) => <PalavraCard key={i} p={p} theme={theme} corNivel={corNivel} />)}
-              </div>
-            )}
+            <input type="text" value={palavra} onChange={(e) => setPalavra(e.target.value)}
+              placeholder="Digite uma palavra em inglês..."
+              className="w-full p-3 rounded-lg text-sm focus:outline-none mb-2"
+              style={{ background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text }}
+              onKeyDown={(e) => { if (e.key === "Enter") abrirCambridge(); }} />
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={abrirCambridge} disabled={!palavra.trim()}
+                className="py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 transition"
+                style={{ background: theme.accent, color: "#fff" }}>
+                Cambridge ↗
+              </button>
+              <button onClick={abrirLinguee} disabled={!palavra.trim()}
+                className="py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 transition"
+                style={{ background: theme.accentSoft, color: theme.accent, border: `1px solid ${theme.accent}` }}>
+                Linguee ↗
+              </button>
+            </div>
+            <p className="text-[11px] mt-2 italic leading-snug" style={{ color: theme.textDim }}>
+              Cambridge mostra o nível CEFR oficial e a definição. Linguee mostra traduções em contexto real (excelente para nuance).
+            </p>
           </div>
 
           <button onClick={() => setState(s => ({ ...s, completouHoje: !s.completouHoje }))}
@@ -809,30 +858,31 @@
             {state.completouHoje ? "Leitura de hoje concluída ✓" : "Marcar leitura como concluída"}
           </button>
 
-          {palavrasRecentes.length > 0 && (
+          {/* HISTÓRICO */}
+          {(state.historico || []).length > 0 && (
             <div>
               <h3 className="text-xs uppercase tracking-[0.2em] mb-2" style={{ color: theme.textDim }}>
-                Palavras recentes ({palavrasRecentes.length})
+                <IHist size={12} className="inline mr-1" /> últimos registros
               </h3>
-              <div className="space-y-2">
-                {palavrasRecentes.map((p,i) => <PalavraCard key={i} p={p} theme={theme} corNivel={corNivel} compact />)}
+              <div className="space-y-1.5">
+                {(state.historico || []).slice(0, 7).map((h, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg text-sm"
+                       style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium capitalize">{formatoData(h.data)}</div>
+                      <div className="text-xs truncate" style={{ color: theme.textDim }}>
+                        {h.livro || "—"} {h.tempo ? `· ${h.tempo} min` : ""} {h.pagina ? `· ${h.pagina}` : ""}
+                      </div>
+                    </div>
+                    {h.completou && <ICheck size={16} style={{ color: theme.accent }} />}
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </div>
       );
     }
-
-    const PalavraCard = ({ p, theme, corNivel, compact }) => (
-      <div className="rounded-lg p-3" style={{ background: compact ? theme.surface : theme.bg, border: `1px solid ${theme.border}` }}>
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="serif text-lg font-semibold italic" style={{ color: theme.accent }}>{p.word}</span>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: corNivel(p.lvl), color: "#fff" }}>{p.lvl}</span>
-          <span className="text-sm" style={{ color: theme.text }}>→ {p.pt}</span>
-        </div>
-        <div className="text-xs mt-1 italic" style={{ color: theme.textDim }}>💡 {p.tip}</div>
-      </div>
-    );
 
     // ────────── ÁGUA ──────────
     function Agua({ theme, state, setState }) {
@@ -846,9 +896,19 @@
       const remover = (i) => setState(s => ({ ...s, ingestoes: s.ingestoes.filter((_,idx) => idx !== i) }));
       const ajustarMeta = (delta) => setState(s => ({ ...s, meta: Math.max(500, s.meta + delta) }));
 
+      const ontem = (state.historico || [])[0];
+
       return (
         <div className="space-y-5">
           <Titulo theme={theme} serifTxt="Hidratação" legenda="Água bebida hoje" />
+
+          {ontem && (
+            <div className="rounded-xl p-3 text-xs" style={{ background: theme.accentSoft, color: theme.textDim }}>
+              <span className="uppercase tracking-wider font-semibold" style={{ color: theme.accent }}>ontem: </span>
+              <span>{ontem.total} / {ontem.meta} ml</span>
+              <span> · {Math.round((ontem.total / ontem.meta) * 100)}%</span>
+            </div>
+          )}
 
           <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
             <div className="flex items-end justify-center mb-4 relative">
@@ -866,13 +926,17 @@
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {[200,250,500].map(ml => (
-              <button key={ml} onClick={() => adicionar(ml)} className="py-4 rounded-xl font-medium transition"
+          {/* BOTÕES: 5 opções — goles pequenos até copo cheio */}
+          <div className="grid grid-cols-5 gap-1.5">
+            {[50, 100, 200, 250, 500].map(ml => (
+              <button key={ml} onClick={() => adicionar(ml)} className="py-3 rounded-xl font-medium transition text-sm"
                 style={{ background: theme.accent, color: "#fff" }}>
-                <IPlus size={16} className="inline mr-1" />{ml}ml
+                +{ml}
               </button>
             ))}
+          </div>
+          <div className="text-[10px] text-center uppercase tracking-wider" style={{ color: theme.textDim }}>
+            ml por toque
           </div>
 
           <div className="rounded-xl p-4 flex items-center justify-between" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
