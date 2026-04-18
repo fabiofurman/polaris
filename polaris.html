@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#1E90FF" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Polaris" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>POLARIS</title>
+
+  <!-- Ícone inline (SVG Estrela Polar) como favicon e apple-touch-icon -->
+  <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><g stroke="%231E90FF" stroke-width="2" stroke-linecap="round" fill="none"><line x1="32" y1="4" x2="32" y2="26"/><line x1="32" y1="38" x2="32" y2="60"/><line x1="4" y1="32" x2="26" y2="32"/><line x1="38" y1="32" x2="60" y2="32"/><line x1="14" y1="14" x2="24" y2="24"/><line x1="40" y1="40" x2="50" y2="50"/><line x1="50" y1="14" x2="40" y2="24"/><line x1="24" y1="40" x2="14" y2="50"/><circle cx="32" cy="32" r="3.5" fill="%231E90FF"/></g></svg>' />
+  <link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23FFFFFF"/><g stroke="%231E90FF" stroke-width="2" stroke-linecap="round" fill="none"><line x1="32" y1="4" x2="32" y2="26"/><line x1="32" y1="38" x2="32" y2="60"/><line x1="4" y1="32" x2="26" y2="32"/><line x1="38" y1="32" x2="60" y2="32"/><line x1="14" y1="14" x2="24" y2="24"/><line x1="40" y1="40" x2="50" y2="50"/><line x1="50" y1="14" x2="40" y2="24"/><line x1="24" y1="40" x2="14" y2="50"/><circle cx="32" cy="32" r="3.5" fill="%231E90FF"/></g></svg>' />
+
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel via CDN (permite JSX direto no <script>) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    html, body, #root { height: 100%; margin: 0; padding: 0; overscroll-behavior-y: none; }
+    body { font-family: 'Inter', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .serif { font-family: 'Cormorant Garamond', 'Times New Roman', serif; letter-spacing: 0.01em; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: none;} }
+    .fade-in { animation: fadeIn 320ms ease both; }
+    @keyframes pulseBlue {
+      0%, 100% { background-color: transparent; }
+      50% { background-color: rgba(30,144,255,0.18); }
+    }
+    .pulse-blue { animation: pulseBlue 600ms ease 3; }
+    @keyframes checkPop { 0% { transform: scale(0);} 70% { transform: scale(1.15);} 100% { transform: scale(1);} }
+    .check-pop { animation: checkPop 260ms ease both; }
+    input, textarea, button { font-family: inherit; }
+    textarea { font-family: inherit; }
+    /* Safe area para iPhones */
+    .safe-top { padding-top: env(safe-area-inset-top); }
+    .safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom) + 6rem); }
+    .nav-safe { padding-bottom: env(safe-area-inset-bottom); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Ícones SVG inline como componentes (substituindo lucide-react) -->
+  <script type="text/babel" data-type="module" data-presets="react">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // ────────── ÍCONES (substituindo lucide-react) ──────────
+    const Icon = ({ size = 20, children, ...props }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           strokeWidth={props.strokeWidth || 2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+        {children}
+      </svg>
+    );
+    const IStar = (p) => <Icon {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></Icon>;
+    const ISun = (p) => <Icon {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></Icon>;
+    const IMoon = (p) => <Icon {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></Icon>;
+    const IBook = (p) => <Icon {...p}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></Icon>;
+    const IPiano = (p) => <Icon {...p}><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v10M12 4v10M16 4v10M3 14h18"/></Icon>;
+    const ILang = (p) => <Icon {...p}><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></Icon>;
+    const IDrop = (p) => <Icon {...p}><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></Icon>;
+    const IActivity = (p) => <Icon {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></Icon>;
+    const IPlay = (p) => <Icon {...p}><polygon points="5 3 19 12 5 21 5 3"/></Icon>;
+    const IPause = (p) => <Icon {...p}><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></Icon>;
+    const ISquare = (p) => <Icon {...p}><rect x="4" y="4" width="16" height="16" rx="1"/></Icon>;
+    const ICheck = (p) => <Icon {...p}><polyline points="20 6 9 17 4 12"/></Icon>;
+    const IPlus = (p) => <Icon {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
+    const IMinus = (p) => <Icon {...p}><line x1="5" y1="12" x2="19" y2="12"/></Icon>;
+    const IChevR = (p) => <Icon {...p}><polyline points="9 18 15 12 9 6"/></Icon>;
+    const IFlame = (p) => <Icon {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></Icon>;
+    const IDown = (p) => <Icon {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Icon>;
+    const IHeart = (p) => <Icon {...p}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></Icon>;
+    const IPin = (p) => <Icon {...p}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></Icon>;
+    const ITimer = (p) => <Icon {...p}><line x1="10" y1="2" x2="14" y2="2"/><line x1="12" y1="14" x2="15" y2="11"/><circle cx="12" cy="14" r="8"/></Icon>;
+    const ISparkles = (p) => <Icon {...p}><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></Icon>;
+    const ITrend = (p) => <Icon {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></Icon>;
+    const IHist = (p) => <Icon {...p}><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15 15"/></Icon>;
+
+    // ────────── DADOS ESTÁTICOS ──────────
+    const MISTERIOS = {
+      gozosos: { nome: "Gozosos", dias: "Segunda e Sábado",
+        misterios: ["Anunciação","Visitação","Nascimento de Jesus","Apresentação de Jesus no Templo","Achado de Jesus no Templo"] },
+      dolorosos: { nome: "Dolorosos", dias: "Terça e Sexta",
+        misterios: ["Agonia no Horto","Flagelação","Coroação de Espinhos","Carregamento da Cruz","Crucificação"] },
+      gloriosos: { nome: "Gloriosos", dias: "Quarta e Domingo",
+        misterios: ["Ressurreição","Ascensão","Descida do Espírito Santo","Assunção de Maria","Coroação de Maria Rainha do Céu"] },
+      luminosos: { nome: "Luminosos", dias: "Quinta-feira",
+        misterios: ["Batismo de Jesus","Bodas de Caná","Proclamação do Reino","Transfiguração","Instituição da Eucaristia"] },
+    };
+    const misterioDoDia = () => {
+      const dia = new Date().getDay();
+      if (dia === 1 || dia === 6) return "gozosos";
+      if (dia === 2 || dia === 5) return "dolorosos";
+      if (dia === 3 || dia === 0) return "gloriosos";
+      return "luminosos";
+    };
+
+    const CEFR_DICT = {
+      eloquent: { pt: "eloquente", lvl: "B2", tip: "Descreve alguém que fala muito bem. Sinônimos: articulate, fluent." },
+      articulate: { pt: "articulado, claro ao falar", lvl: "B2", tip: "Usado para quem expressa ideias com clareza." },
+      reckoning: { pt: "ajuste de contas, reflexão", lvl: "C1", tip: "Sentido figurado frequente: 'a day of reckoning'." },
+      breath: { pt: "respiração, fôlego", lvl: "A2", tip: "Básico, mas veja 'breathe' (verbo) e 'breathless' (adjetivo)." },
+      ponder: { pt: "ponderar, refletir", lvl: "B2", tip: "Mais formal que 'think about'." },
+      sublime: { pt: "sublime", lvl: "C1", tip: "Alto registro; usado em crítica de arte e literatura." },
+      overwhelming: { pt: "avassalador, esmagador", lvl: "B2", tip: "Pode ser positivo ('overwhelming joy') ou negativo." },
+      grief: { pt: "luto, pesar profundo", lvl: "B2", tip: "Mais forte que 'sadness'; associado a perda." },
+      solace: { pt: "consolo, conforto", lvl: "C1", tip: "Formal/literário. 'To find solace in...'" },
+      resilience: { pt: "resiliência", lvl: "B2", tip: "Muito usado em contextos psicológicos e sociais." },
+      endeavour: { pt: "esforço, empenho", lvl: "C1", tip: "Grafia britânica; americana é 'endeavor'." },
+      endeavor: { pt: "esforço, empenho", lvl: "C1", tip: "Grafia americana; britânica é 'endeavour'." },
+      acknowledge: { pt: "reconhecer, admitir", lvl: "B2", tip: "Mais formal que 'admit'." },
+      profound: { pt: "profundo (figurado)", lvl: "B2", tip: "Use para ideias/sentimentos, não para piscinas." },
+      inherent: { pt: "inerente, intrínseco", lvl: "C1", tip: "'Inherent to/in something'." },
+      compelling: { pt: "convincente, cativante", lvl: "B2", tip: "'A compelling argument'." },
+      acquiesce: { pt: "consentir, concordar relutantemente", lvl: "C2", tip: "Muito formal." },
+      ephemeral: { pt: "efêmero", lvl: "C1", tip: "Literário. Sinônimo: fleeting, transient." },
+      ubiquitous: { pt: "ubíquo, onipresente", lvl: "C1", tip: "'Smartphones are ubiquitous'." },
+      meticulous: { pt: "meticuloso", lvl: "B2", tip: "Positivo: cuidadoso com detalhes." },
+      nuance: { pt: "nuance, sutileza", lvl: "B2", tip: "'The nuances of the argument'." },
+      poignant: { pt: "pungente, comovente", lvl: "C1", tip: "Usado para arte, momentos, memórias." },
+      resonate: { pt: "ressoar, repercutir", lvl: "B2", tip: "Figurado: 'Her words resonated with me'." },
+      scrutiny: { pt: "escrutínio, exame atento", lvl: "C1", tip: "'Under public scrutiny'." },
+      tenacious: { pt: "tenaz, persistente", lvl: "C1", tip: "Positivo: não desiste fácil." },
+      vivid: { pt: "vívido, nítido", lvl: "B2", tip: "'A vivid memory', 'vivid colours'." },
+      whimsical: { pt: "caprichoso, fantasioso", lvl: "C1", tip: "Positivo: charmoso e imprevisível." },
+      yearn: { pt: "ansiar, almejar", lvl: "C1", tip: "'To yearn for something/someone'." },
+      candid: { pt: "sincero, franco", lvl: "B2", tip: "Cuidado: falso cognato de 'cândido'." },
+      daunting: { pt: "intimidador, assustador", lvl: "B2", tip: "'A daunting task'." },
+      earnest: { pt: "sério, sincero", lvl: "B2", tip: "'In earnest' = pra valer." },
+      fleeting: { pt: "fugaz, passageiro", lvl: "C1", tip: "'A fleeting moment'." },
+      gratitude: { pt: "gratidão", lvl: "B1", tip: "Mais formal que 'thanks'." },
+      humility: { pt: "humildade", lvl: "B2", tip: "Virtude clássica; oposto: arrogance." },
+      intricate: { pt: "intrincado, complexo", lvl: "B2", tip: "'Intricate details'." },
+    };
+
+    const FRASES = [
+      "Um passo firme hoje vale mais que mil planos.",
+      "A constância vence o talento quando o talento não é constante.",
+      "O silêncio é onde moram as melhores ideias.",
+      "Cada hábito é um voto em quem você está se tornando.",
+      "Recolher-se é o primeiro movimento de quem avança.",
+      "A atenção é a forma mais rara de generosidade consigo mesmo.",
+      "O que se mede, se percebe. O que se percebe, se transforma.",
+    ];
+
+    // ────────── UTILS ──────────
+    const hoje = () => new Date().toISOString().slice(0, 10);
+    const formatoData = (iso) => new Date(iso + "T00:00:00").toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
+    const fmtMMSS = (s) => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(Math.floor(s%60)).padStart(2,"0")}`;
+    const fmtHHMMSS = (s) => `${String(Math.floor(s/3600)).padStart(2,"0")}:${String(Math.floor((s%3600)/60)).padStart(2,"0")}:${String(Math.floor(s%60)).padStart(2,"0")}`;
+
+    // localStorage hook
+    const useLocal = (key, initial) => {
+      const [val, setVal] = useState(() => {
+        try {
+          const raw = localStorage.getItem("polaris_" + key);
+          return raw ? JSON.parse(raw) : initial;
+        } catch { return initial; }
+      });
+      useEffect(() => {
+        try { localStorage.setItem("polaris_" + key, JSON.stringify(val)); } catch {}
+      }, [key, val]);
+      return [val, setVal];
+    };
+
+    // ────────── LOGO ──────────
+    const LogoPolaris = ({ size = 32, className = "" }) => (
+      <svg viewBox="0 0 64 64" width={size} height={size} className={className} fill="none">
+        <g stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+          <line x1="32" y1="4" x2="32" y2="26" />
+          <line x1="32" y1="38" x2="32" y2="60" />
+          <line x1="4" y1="32" x2="26" y2="32" />
+          <line x1="38" y1="32" x2="60" y2="32" />
+          <line x1="14" y1="14" x2="24" y2="24" />
+          <line x1="40" y1="40" x2="50" y2="50" />
+          <line x1="50" y1="14" x2="40" y2="24" />
+          <line x1="24" y1="40" x2="14" y2="50" />
+          <circle cx="32" cy="32" r="3.5" fill="currentColor" stroke="none" />
+        </g>
+      </svg>
+    );
+
+    // ═══════════════════════════════════════════════════════════════
+    // APP PRINCIPAL
+    // ═══════════════════════════════════════════════════════════════
+    function Polaris() {
+      const [dark, setDark] = useLocal("dark", false);
+      const [tab, setTab] = useState("dashboard");
+
+      const [rosario, setRosario] = useLocal("rosario", { historico: {}, streak: 0, ultimaData: null });
+      const [piano, setPiano] = useLocal("piano", {
+        peca: "",
+        hoje: { data: hoje(), blocos: [false,false,false,false], notas: ["","","",""] },
+        historico: [],
+      });
+      const [leitura, setLeitura] = useLocal("leitura", {
+        livro: "", tempoHoje: 0, pagina: "", completouHoje: false, palavras: [], historico: [],
+      });
+      const [agua, setAgua] = useLocal("agua", { meta: 2000, ingestoes: [], data: hoje() });
+      const [exercicio, setExercicio] = useLocal("exercicio", { historico: [], streak: 0, ultimaData: null });
+
+      // Reset piano se virou o dia
+      useEffect(() => {
+        if (piano.hoje.data !== hoje()) {
+          setPiano((p) => ({
+            ...p,
+            historico: [{ ...p.hoje }, ...p.historico].slice(0, 30),
+            hoje: { data: hoje(), blocos: [false,false,false,false], notas: ["","","",""] },
+          }));
+        }
+        if (agua.data !== hoje()) {
+          setAgua((a) => ({ ...a, data: hoje(), ingestoes: [] }));
+        }
+      }, []);
+
+      const theme = dark
+        ? { bg: "#0B1220", surface: "#111A2E", surface2: "#1A2544", border: "#27324E",
+            text: "#E6F2FF", textDim: "#8FA3C7", accent: "#4169E1", accent2: "#1E90FF", accentSoft: "#1A2544" }
+        : { bg: "#F0F4F8", surface: "#FFFFFF", surface2: "#E6F2FF", border: "#D4E0EF",
+            text: "#0B1E3F", textDim: "#5B6B85", accent: "#1E90FF", accent2: "#4169E1", accentSoft: "#E6F2FF" };
+
+      const frase = useMemo(() => FRASES[new Date().getDate() % FRASES.length], []);
+
+      const mlHoje = agua.ingestoes.reduce((a,b) => a + b.ml, 0);
+      const statusDia = {
+        rosario: rosario.historico[hoje()]?.feito || false,
+        piano: piano.hoje.blocos.some(Boolean),
+        pianoCompleto: piano.hoje.blocos.every(Boolean),
+        leitura: leitura.completouHoje,
+        agua: mlHoje >= agua.meta,
+        exercicio: exercicio.ultimaData === hoje(),
+      };
+
+      const exportar = () => {
+        const data = { rosario, piano, leitura, agua, exercicio, exportadoEm: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = `polaris-backup-${hoje()}.json`; a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const tabs = [
+        { id: "dashboard", label: "Início", icon: IStar },
+        { id: "rosario", label: "Rosário", icon: IBook },
+        { id: "piano", label: "Piano", icon: IPiano },
+        { id: "leitura", label: "Leitura", icon: ILang },
+        { id: "agua", label: "Água", icon: IDrop },
+        { id: "exercicio", label: "Exercício", icon: IActivity },
+      ];
+
+      return (
+        <div style={{ background: theme.bg, color: theme.text, minHeight: "100vh", transition: "background 300ms ease, color 300ms ease" }}
+             className="safe-bottom">
+          <header style={{ background: theme.surface, borderBottom: `1px solid ${theme.border}`, position: "sticky", top: 0, zIndex: 20 }}
+                  className="safe-top">
+            <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div style={{ color: theme.accent }}><LogoPolaris size={28} /></div>
+                <div>
+                  <div className="serif text-2xl font-semibold leading-none" style={{ letterSpacing: "0.04em" }}>POLARIS</div>
+                  <div className="text-[10px] uppercase tracking-[0.25em]" style={{ color: theme.textDim }}>norte interior</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={exportar} className="p-2 rounded-full transition" style={{ background: theme.accentSoft, color: theme.accent }}>
+                  <IDown size={16} />
+                </button>
+                <button onClick={() => setDark(d => !d)} className="p-2 rounded-full transition" style={{ background: theme.accentSoft, color: theme.accent }}>
+                  {dark ? <ISun size={16} /> : <IMoon size={16} />}
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-3xl mx-auto px-4 py-5 fade-in" key={tab}>
+            {tab === "dashboard" && <Dashboard theme={theme} statusDia={statusDia} frase={frase} setTab={setTab}
+              rosario={rosario} piano={piano} leitura={leitura} agua={agua} exercicio={exercicio} mlHoje={mlHoje} />}
+            {tab === "rosario" && <Rosario theme={theme} state={rosario} setState={setRosario} />}
+            {tab === "piano" && <PianoSec theme={theme} state={piano} setState={setPiano} />}
+            {tab === "leitura" && <Leitura theme={theme} state={leitura} setState={setLeitura} />}
+            {tab === "agua" && <Agua theme={theme} state={agua} setState={setAgua} />}
+            {tab === "exercicio" && <Exercicio theme={theme} state={exercicio} setState={setExercicio} />}
+          </main>
+
+          <nav style={{ background: theme.surface, borderTop: `1px solid ${theme.border}`, position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 20 }}
+               className="nav-safe">
+            <div className="max-w-3xl mx-auto px-1 py-2 grid grid-cols-6 gap-1">
+              {tabs.map(({ id, label, icon: Ic }) => {
+                const active = tab === id;
+                return (
+                  <button key={id} onClick={() => setTab(id)}
+                    className="flex flex-col items-center justify-center py-1.5 rounded-lg transition"
+                    style={{ color: active ? theme.accent : theme.textDim, background: active ? theme.accentSoft : "transparent" }}>
+                    <Ic size={18} strokeWidth={active ? 2.2 : 1.6} />
+                    <span className="text-[10px] mt-0.5 font-medium tracking-wide">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </div>
+      );
+    }
+
+    // ────────── DASHBOARD ──────────
+    function Dashboard({ theme, statusDia, frase, setTab, rosario, piano, leitura, agua, exercicio, mlHoje }) {
+      const [now, setNow] = useState(new Date());
+      useEffect(() => { const i = setInterval(() => setNow(new Date()), 30000); return () => clearInterval(i); }, []);
+
+      const diaSemana = now.toLocaleDateString("pt-BR", { weekday: "long" });
+      const dataFmt = now.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
+      const hora = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const blocosFeitos = piano.hoje.blocos.filter(Boolean).length;
+
+      const itens = [
+        { id: "rosario", label: "Rosário", icon: IBook, status: statusDia.rosario, info: statusDia.rosario ? "rezado hoje" : "pendente" },
+        { id: "piano", label: "Piano", icon: IPiano, status: statusDia.pianoCompleto, partial: statusDia.piano, info: `${blocosFeitos}/4 blocos` },
+        { id: "leitura", label: "Leitura", icon: ILang, status: statusDia.leitura, info: leitura.tempoHoje ? `${leitura.tempoHoje} min` : "pendente" },
+        { id: "agua", label: "Água", icon: IDrop, status: statusDia.agua, info: `${mlHoje} / ${agua.meta} ml` },
+        { id: "exercicio", label: "Exercício", icon: IActivity, status: statusDia.exercicio, info: statusDia.exercicio ? "feito hoje" : "pendente" },
+      ];
+      const completos = itens.filter(i => i.status).length;
+
+      return (
+        <div className="space-y-5">
+          <div>
+            <div className="text-xs uppercase tracking-[0.3em] mb-1" style={{ color: theme.textDim }}>{hora}</div>
+            <div className="serif text-4xl font-medium leading-tight capitalize">{diaSemana}</div>
+            <div className="text-sm mt-0.5" style={{ color: theme.textDim }}>{dataFmt}</div>
+          </div>
+
+          <div className="rounded-2xl p-5 relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent2} 100%)`, color: "#fff" }}>
+            <ISparkles size={18} className="mb-2 opacity-80" />
+            <p className="serif text-lg leading-snug font-medium italic">"{frase}"</p>
+            <div className="text-xs mt-3 opacity-75">{completos} de {itens.length} tarefas concluídas hoje</div>
+          </div>
+
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-[0.2em] mb-3" style={{ color: theme.textDim }}>Hoje</h2>
+            <div className="grid grid-cols-1 gap-2">
+              {itens.map(i => (
+                <button key={i.id} onClick={() => setTab(i.id)} className="rounded-xl p-4 flex items-center justify-between transition"
+                        style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center"
+                         style={{ background: i.status ? theme.accent : theme.accentSoft, color: i.status ? "#fff" : theme.accent }}>
+                      <i.icon size={18} />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium">{i.label}</div>
+                      <div className="text-xs" style={{ color: theme.textDim }}>{i.info}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {i.status ? (
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center check-pop" style={{ background: theme.accent }}>
+                        <ICheck size={14} color="#fff" strokeWidth={3} />
+                      </div>
+                    ) : i.partial ? (
+                      <div className="w-6 h-6 rounded-full" style={{ border: `2px solid ${theme.accent}`, background: `linear-gradient(90deg, ${theme.accent} 50%, transparent 50%)` }} />
+                    ) : (
+                      <div className="w-6 h-6 rounded-full" style={{ border: `2px solid ${theme.border}` }} />
+                    )}
+                    <IChevR size={16} style={{ color: theme.textDim }} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <StreakCard theme={theme} label="Rosário" valor={rosario.streak} icon={IBook} />
+            <StreakCard theme={theme} label="Exercício" valor={exercicio.streak} icon={IActivity} />
+          </div>
+        </div>
+      );
+    }
+
+    const StreakCard = ({ theme, label, valor, icon: Ic }) => (
+      <div className="rounded-xl p-4" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+        <div className="flex items-center gap-2 mb-2" style={{ color: theme.textDim }}>
+          <Ic size={14} /><span className="text-xs uppercase tracking-wider">{label}</span>
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className="serif text-3xl font-semibold" style={{ color: theme.accent }}>{valor}</span>
+          <IFlame size={16} style={{ color: valor > 0 ? "#FF8A3D" : theme.textDim }} />
+          <span className="text-xs ml-1" style={{ color: theme.textDim }}>dias</span>
+        </div>
+      </div>
+    );
+
+    // ────────── ROSÁRIO ──────────
+    function Rosario({ theme, state, setState }) {
+      const sugerido = misterioDoDia();
+      const [tipo, setTipo] = useState(state.historico[hoje()]?.tipo || sugerido);
+      const [nota, setNota] = useState(state.historico[hoje()]?.nota || "");
+      const feito = state.historico[hoje()]?.feito || false;
+
+      const marcar = () => {
+        setState(s => {
+          const historico = { ...s.historico };
+          if (!feito) historico[hoje()] = { tipo, nota, feito: true, data: hoje() };
+          else delete historico[hoje()];
+          let streak = 0;
+          const d = new Date();
+          while (true) {
+            const iso = d.toISOString().slice(0,10);
+            if (historico[iso]?.feito) { streak++; d.setDate(d.getDate()-1); } else break;
+          }
+          return { ...s, historico, streak };
+        });
+      };
+
+      useEffect(() => {
+        if (!feito) return;
+        setState(s => ({ ...s, historico: { ...s.historico, [hoje()]: { ...s.historico[hoje()], nota } } }));
+      }, [nota]);
+
+      const ultimas7 = Object.values(state.historico).sort((a,b) => a.data < b.data ? 1 : -1).slice(0,7);
+
+      return (
+        <div className="space-y-5">
+          <Titulo theme={theme} serifTxt="Santo Rosário" legenda="Contemplação dos mistérios" />
+
+          <div>
+            <label className="text-xs uppercase tracking-[0.2em] mb-2 block" style={{ color: theme.textDim }}>
+              Mistérios {sugerido === tipo && "(sugeridos hoje)"}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(MISTERIOS).map(([key, m]) => {
+                const ativo = tipo === key;
+                return (
+                  <button key={key} onClick={() => setTipo(key)} className="p-3 rounded-xl text-left transition"
+                    style={{ background: ativo ? theme.accent : theme.surface, color: ativo ? "#fff" : theme.text, border: `1px solid ${ativo ? theme.accent : theme.border}` }}>
+                    <div className="serif text-lg font-semibold">{m.nome}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color: ativo ? "#cfe" : theme.textDim }}>{m.dias}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-xl p-4" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+            <div className="text-xs uppercase tracking-[0.2em] mb-3" style={{ color: theme.textDim }}>Os cinco mistérios</div>
+            <ol className="space-y-2">
+              {MISTERIOS[tipo].misterios.map((m, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="serif text-lg font-semibold w-6 text-center" style={{ color: theme.accent }}>{i+1}.</span>
+                  <span className="pt-0.5">{m}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div>
+            <label className="text-xs uppercase tracking-[0.2em] mb-2 block" style={{ color: theme.textDim }}>Reflexão / Intenções do dia</label>
+            <textarea value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Por quem rezou hoje? O que meditou?" rows={4}
+              className="w-full p-3 rounded-xl text-sm focus:outline-none"
+              style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text, resize: "vertical" }} />
+          </div>
+
+          <button onClick={marcar} className="w-full p-4 rounded-xl font-medium transition flex items-center justify-center gap-2"
+            style={{ background: feito ? theme.accent : theme.surface, color: feito ? "#fff" : theme.accent, border: `1.5px solid ${theme.accent}` }}>
+            {feito ? <ICheck size={18} /> : <IHeart size={18} />}
+            {feito ? "Rezei hoje ✓" : "Marcar como rezado"}
+          </button>
+
+          <div className="flex items-center justify-center gap-2 py-2">
+            <IFlame size={16} style={{ color: state.streak > 0 ? "#FF8A3D" : theme.textDim }} />
+            <span className="text-sm" style={{ color: theme.textDim }}>
+              <strong style={{ color: theme.text }}>{state.streak}</strong> dias consecutivos
+            </span>
+          </div>
+
+          {ultimas7.length > 0 && (
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.2em] mb-2" style={{ color: theme.textDim }}>
+                <IHist size={12} className="inline mr-1" /> últimas rezas
+              </h3>
+              <div className="space-y-1.5">
+                {ultimas7.map((h,i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg text-sm"
+                       style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+                    <div>
+                      <div className="font-medium capitalize">{formatoData(h.data)}</div>
+                      <div className="text-xs" style={{ color: theme.textDim }}>Mistérios {MISTERIOS[h.tipo]?.nome}</div>
+                    </div>
+                    <ICheck size={16} style={{ color: theme.accent }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ────────── PIANO ──────────
+    function PianoSec({ theme, state, setState }) {
+      const [seconds, setSeconds] = useState(30 * 60);
+      const [running, setRunning] = useState(false);
+      const [finishedPulse, setFinishedPulse] = useState(false);
+      const [activeBlock, setActiveBlock] = useState(null);
+      const [pendingNote, setPendingNote] = useState(null);
+      const [tempNote, setTempNote] = useState("");
+      const intervalRef = useRef(null);
+
+      useEffect(() => {
+        if (!running) return;
+        intervalRef.current = setInterval(() => {
+          setSeconds(s => {
+            if (s <= 1) {
+              clearInterval(intervalRef.current);
+              setRunning(false);
+              setFinishedPulse(true);
+              setTimeout(() => setFinishedPulse(false), 1800);
+              if (navigator.vibrate) navigator.vibrate([200,100,200]);
+              try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.001, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+                osc.start(); osc.stop(ctx.currentTime + 0.8);
+              } catch (e) {}
+              if (activeBlock !== null) {
+                setPendingNote({ idx: activeBlock });
+                setTempNote(state.hoje.notas[activeBlock] || "");
+              }
+              return 0;
+            }
+            return s - 1;
+          });
+        }, 1000);
+        return () => clearInterval(intervalRef.current);
+      }, [running, activeBlock]);
+
+      const iniciar = (idx) => { setActiveBlock(idx); setSeconds(30*60); setRunning(true); };
+      const pausar = () => setRunning(false);
+      const retomar = () => setRunning(true);
+      const cancelar = () => { setRunning(false); setSeconds(30*60); setActiveBlock(null); };
+
+      const toggleManual = (idx) => {
+        if (state.hoje.blocos[idx]) {
+          setState(s => {
+            const blocos = [...s.hoje.blocos]; blocos[idx] = false;
+            const notas = [...s.hoje.notas]; notas[idx] = "";
+            return { ...s, hoje: { ...s.hoje, blocos, notas } };
+          });
+          return;
+        }
+        if (running && activeBlock === idx) {
+          const ok = window.confirm(`Tem certeza? Ainda faltam ${fmtMMSS(seconds)} minutos nesta sessão.`);
+          if (!ok) return;
+          setRunning(false);
+        }
+        setPendingNote({ idx });
+        setTempNote(state.hoje.notas[idx] || "");
+      };
+
+      const confirmarNota = () => {
+        if (!pendingNote) return;
+        if (!tempNote.trim()) { alert("Anote brevemente o que estudou — assim o registro tem valor."); return; }
+        const idx = pendingNote.idx;
+        setState(s => {
+          const blocos = [...s.hoje.blocos]; blocos[idx] = true;
+          const notas = [...s.hoje.notas]; notas[idx] = tempNote;
+          return { ...s, hoje: { ...s.hoje, blocos, notas } };
+        });
+        setPendingNote(null); setTempNote(""); setActiveBlock(null);
+      };
+
+      const blocosFeitos = state.hoje.blocos.filter(Boolean).length;
+      const totalSemana = useMemo(() => {
+        const feitos = state.historico.reduce((acc, d) => acc + d.blocos.filter(Boolean).length, 0);
+        return (feitos + blocosFeitos) * 30;
+      }, [state.historico, blocosFeitos]);
+
+      return (
+        <div className={`space-y-5 ${finishedPulse ? "pulse-blue" : ""} rounded-xl`}>
+          <Titulo theme={theme} serifTxt="Piano" legenda="Estudo de resolução técnica" />
+
+          <div>
+            <label className="text-xs uppercase tracking-[0.2em] mb-2 block" style={{ color: theme.textDim }}>Peça em estudo</label>
+            <input type="text" value={state.peca} onChange={(e) => setState(s => ({ ...s, peca: e.target.value }))}
+              placeholder="ex: Nocturne Op. 9 No. 2 — Chopin"
+              className="w-full p-3 rounded-xl text-sm focus:outline-none"
+              style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }} />
+          </div>
+
+          <div className="rounded-2xl p-6 text-center relative overflow-hidden"
+               style={{ background: activeBlock !== null ? `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent2} 100%)` : theme.surface,
+                        border: `1px solid ${theme.border}`, color: activeBlock !== null ? "#fff" : theme.text }}>
+            {activeBlock !== null && <div className="text-xs uppercase tracking-[0.3em] mb-2 opacity-80">Bloco {activeBlock + 1} de 4</div>}
+            <div className="serif font-semibold tabular-nums"
+                 style={{ fontSize: "clamp(56px, 18vw, 96px)", lineHeight: 1,
+                          color: activeBlock !== null ? "#fff" : theme.accent, letterSpacing: "0.02em" }}>
+              {fmtMMSS(seconds)}
+            </div>
+            <div className="text-xs uppercase tracking-[0.25em] mt-2" style={{ opacity: 0.7 }}>
+              {seconds === 0 ? "sessão concluída" : running ? "em sessão" : activeBlock !== null ? "pausado" : "pronto"}
+            </div>
+            <div className="flex gap-2 justify-center mt-5">
+              {activeBlock === null ? (
+                <div className="text-xs opacity-80">Escolha um bloco abaixo para iniciar →</div>
+              ) : (
+                <>
+                  {running ? (
+                    <button onClick={pausar} className="px-4 py-2 rounded-full flex items-center gap-1.5 text-sm font-medium" style={{ background: "rgba(255,255,255,0.2)", color: "#fff" }}>
+                      <IPause size={14} /> Pausar
+                    </button>
+                  ) : seconds > 0 ? (
+                    <button onClick={retomar} className="px-4 py-2 rounded-full flex items-center gap-1.5 text-sm font-medium" style={{ background: "rgba(255,255,255,0.2)", color: "#fff" }}>
+                      <IPlay size={14} /> Retomar
+                    </button>
+                  ) : null}
+                  <button onClick={cancelar} className="px-4 py-2 rounded-full flex items-center gap-1.5 text-sm font-medium" style={{ background: "rgba(255,255,255,0.15)", color: "#fff" }}>
+                    <ISquare size={14} /> Cancelar
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs uppercase tracking-[0.2em]" style={{ color: theme.textDim }}>
+                Blocos de 30 min ({blocosFeitos}/4 · {blocosFeitos * 30} min)
+              </label>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[0,1,2,3].map(i => {
+                const feito = state.hoje.blocos[i];
+                const isActive = activeBlock === i && running;
+                return (
+                  <div key={i} className="flex flex-col items-center gap-1.5">
+                    <button onClick={() => toggleManual(i)}
+                      className="w-full aspect-square rounded-xl flex items-center justify-center transition relative"
+                      style={{ background: feito ? theme.accent : isActive ? theme.accent2 : theme.surface,
+                               border: `2px solid ${feito || isActive ? theme.accent : theme.border}`,
+                               color: feito || isActive ? "#fff" : theme.textDim }}>
+                      {feito ? <ICheck size={24} strokeWidth={2.5} className="check-pop" />
+                        : isActive ? <ITimer size={20} />
+                        : <span className="serif text-xl">{i+1}</span>}
+                    </button>
+                    {!feito && activeBlock !== i && (
+                      <button onClick={() => iniciar(i)} disabled={running}
+                        className="text-[10px] font-medium px-2 py-1 rounded-full w-full disabled:opacity-40"
+                        style={{ background: theme.accentSoft, color: theme.accent }}>
+                        ▶ iniciar
+                      </button>
+                    )}
+                    {feito && <div className="text-[10px]" style={{ color: theme.textDim }}>✓ 30 min</div>}
+                    {isActive && <div className="text-[10px] font-medium" style={{ color: theme.accent }}>ativo</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {state.hoje.blocos.some(Boolean) && (
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-[0.2em] block" style={{ color: theme.textDim }}>Anotações de hoje</label>
+              {state.hoje.blocos.map((b,i) => b && (
+                <div key={i} className="p-3 rounded-lg text-sm" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+                  <div className="text-xs font-semibold mb-1" style={{ color: theme.accent }}>Bloco {i+1}</div>
+                  <div style={{ color: theme.text }}>{state.hoje.notas[i] || "—"}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="rounded-xl p-4 flex items-center justify-between" style={{ background: theme.accentSoft, color: theme.text }}>
+            <div>
+              <div className="text-xs uppercase tracking-[0.2em]" style={{ color: theme.textDim }}>total semanal</div>
+              <div className="serif text-2xl font-semibold" style={{ color: theme.accent }}>
+                {Math.floor(totalSemana / 60)}h {totalSemana % 60}min
+              </div>
+            </div>
+            <ITrend size={28} style={{ color: theme.accent }} />
+          </div>
+
+          {pendingNote && (
+            <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }} onClick={() => setPendingNote(null)}>
+              <div className="w-full max-w-md rounded-2xl p-5" style={{ background: theme.surface, color: theme.text }} onClick={(e) => e.stopPropagation()}>
+                <div className="serif text-xl font-semibold mb-1">Bloco {pendingNote.idx + 1} concluído</div>
+                <div className="text-sm mb-3" style={{ color: theme.textDim }}>Registre o que estudou neste bloco (obrigatório):</div>
+                <textarea autoFocus value={tempNote} onChange={(e) => setTempNote(e.target.value)} rows={4}
+                  placeholder="ex: Escalas em Ré maior, dinâmica no trecho A-B, articulação com pedal"
+                  className="w-full p-3 rounded-xl text-sm focus:outline-none"
+                  style={{ background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text, resize: "vertical" }} />
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => setPendingNote(null)} className="flex-1 py-2.5 rounded-xl text-sm font-medium" style={{ background: theme.accentSoft, color: theme.accent }}>Cancelar</button>
+                  <button onClick={confirmarNota} className="flex-1 py-2.5 rounded-xl text-sm font-medium" style={{ background: theme.accent, color: "#fff" }}>Confirmar ✓</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ────────── LEITURA ──────────
+    function Leitura({ theme, state, setState }) {
+      const [trecho, setTrecho] = useState("");
+      const [resultado, setResultado] = useState(null);
+
+      const analisar = () => {
+        const palavras = trecho.toLowerCase().replace(/[^\p{L}\s']/gu, " ").split(/\s+/).filter(Boolean);
+        const encontradas = [];
+        const vistas = new Set();
+        for (const p of palavras) {
+          if (CEFR_DICT[p] && !vistas.has(p)) {
+            vistas.add(p);
+            encontradas.push({ word: p, ...CEFR_DICT[p], data: hoje() });
+          }
+        }
+        setResultado(encontradas);
+        setState(s => {
+          const chaves = new Set(s.palavras.map(p => p.word + p.data));
+          const novas = encontradas.filter(p => !chaves.has(p.word + p.data));
+          return { ...s, palavras: [...novas, ...s.palavras].slice(0, 100) };
+        });
+      };
+
+      const corNivel = (lvl) => ({ A1:"#9AC5E8",A2:"#7FB3DF",B1:"#5EA1D6",B2:"#3F8FCC",C1:"#1E6FB8",C2:"#0B4F96" }[lvl] || theme.accent);
+      const palavrasRecentes = state.palavras.slice(0, 10);
+
+      return (
+        <div className="space-y-5">
+          <Titulo theme={theme} serifTxt="Leitura em Inglês" legenda="Vocabulário e compreensão" />
+
+          <div className="grid grid-cols-1 gap-3">
+            <div>
+              <label className="text-xs uppercase tracking-[0.2em] mb-2 block" style={{ color: theme.textDim }}>Livro / material</label>
+              <input type="text" value={state.livro} onChange={(e) => setState(s => ({ ...s, livro: e.target.value }))}
+                placeholder="ex: Breath — James Nestor"
+                className="w-full p-3 rounded-xl text-sm focus:outline-none"
+                style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs uppercase tracking-[0.2em] mb-2 block" style={{ color: theme.textDim }}>Tempo hoje (min)</label>
+                <input type="number" min="0" value={state.tempoHoje}
+                  onChange={(e) => setState(s => ({ ...s, tempoHoje: parseInt(e.target.value) || 0 }))}
+                  className="w-full p-3 rounded-xl text-sm focus:outline-none"
+                  style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }} />
+              </div>
+              <div>
+                <label className="text-xs uppercase tracking-[0.2em] mb-2 block" style={{ color: theme.textDim }}>Página / cap.</label>
+                <input type="text" value={state.pagina} onChange={(e) => setState(s => ({ ...s, pagina: e.target.value }))}
+                  placeholder="p. 142"
+                  className="w-full p-3 rounded-xl text-sm focus:outline-none"
+                  style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }} />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl p-4" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+            <div className="flex items-center gap-2 mb-2">
+              <ILang size={16} style={{ color: theme.accent }} />
+              <span className="text-xs uppercase tracking-[0.2em]" style={{ color: theme.textDim }}>Tradutor CEFR</span>
+            </div>
+            <textarea value={trecho} onChange={(e) => setTrecho(e.target.value)} rows={4}
+              placeholder="Paste a paragraph from your book here..."
+              className="w-full p-3 rounded-lg text-sm focus:outline-none"
+              style={{ background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text, resize: "vertical" }} />
+            <button onClick={analisar} disabled={!trecho.trim()}
+              className="mt-2 w-full py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 transition"
+              style={{ background: theme.accent, color: "#fff" }}>
+              Analisar palavras
+            </button>
+
+            {resultado && resultado.length === 0 && (
+              <div className="mt-3 text-sm text-center py-3" style={{ color: theme.textDim }}>
+                Nenhuma palavra "difícil" reconhecida neste trecho. Ótimo sinal — você está lendo com fluência.
+              </div>
+            )}
+
+            {resultado && resultado.length > 0 && (
+              <div className="mt-3 space-y-2 fade-in">
+                <div className="text-xs" style={{ color: theme.textDim }}>
+                  {resultado.length} {resultado.length === 1 ? "palavra encontrada" : "palavras encontradas"}:
+                </div>
+                {resultado.map((p,i) => <PalavraCard key={i} p={p} theme={theme} corNivel={corNivel} />)}
+              </div>
+            )}
+          </div>
+
+          <button onClick={() => setState(s => ({ ...s, completouHoje: !s.completouHoje }))}
+            className="w-full p-4 rounded-xl font-medium transition flex items-center justify-center gap-2"
+            style={{ background: state.completouHoje ? theme.accent : theme.surface,
+                     color: state.completouHoje ? "#fff" : theme.accent, border: `1.5px solid ${theme.accent}` }}>
+            {state.completouHoje ? <ICheck size={18} /> : <IBook size={18} />}
+            {state.completouHoje ? "Leitura de hoje concluída ✓" : "Marcar leitura como concluída"}
+          </button>
+
+          {palavrasRecentes.length > 0 && (
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.2em] mb-2" style={{ color: theme.textDim }}>
+                Palavras recentes ({palavrasRecentes.length})
+              </h3>
+              <div className="space-y-2">
+                {palavrasRecentes.map((p,i) => <PalavraCard key={i} p={p} theme={theme} corNivel={corNivel} compact />)}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const PalavraCard = ({ p, theme, corNivel, compact }) => (
+      <div className="rounded-lg p-3" style={{ background: compact ? theme.surface : theme.bg, border: `1px solid ${theme.border}` }}>
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <span className="serif text-lg font-semibold italic" style={{ color: theme.accent }}>{p.word}</span>
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: corNivel(p.lvl), color: "#fff" }}>{p.lvl}</span>
+          <span className="text-sm" style={{ color: theme.text }}>→ {p.pt}</span>
+        </div>
+        <div className="text-xs mt-1 italic" style={{ color: theme.textDim }}>💡 {p.tip}</div>
+      </div>
+    );
+
+    // ────────── ÁGUA ──────────
+    function Agua({ theme, state, setState }) {
+      const total = state.ingestoes.reduce((a,b) => a + b.ml, 0);
+      const pct = Math.min(100, (total / state.meta) * 100);
+
+      const adicionar = (ml) => {
+        const hora = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        setState(s => ({ ...s, ingestoes: [...s.ingestoes, { ml, hora }] }));
+      };
+      const remover = (i) => setState(s => ({ ...s, ingestoes: s.ingestoes.filter((_,idx) => idx !== i) }));
+      const ajustarMeta = (delta) => setState(s => ({ ...s, meta: Math.max(500, s.meta + delta) }));
+
+      return (
+        <div className="space-y-5">
+          <Titulo theme={theme} serifTxt="Hidratação" legenda="Água bebida hoje" />
+
+          <div className="rounded-2xl p-6 relative overflow-hidden" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+            <div className="flex items-end justify-center mb-4 relative">
+              <div className="relative rounded-b-3xl rounded-t-lg overflow-hidden"
+                   style={{ width: 120, height: 180, border: `3px solid ${theme.accent}`, background: theme.bg }}>
+                <div className="absolute bottom-0 left-0 right-0 transition-all duration-500"
+                     style={{ height: `${pct}%`, background: `linear-gradient(180deg, ${theme.accent2} 0%, ${theme.accent} 100%)` }} />
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="serif text-4xl font-semibold" style={{ color: theme.accent }}>
+                {total} <span className="text-xl" style={{ color: theme.textDim }}>/ {state.meta} ml</span>
+              </div>
+              <div className="text-xs uppercase tracking-[0.2em] mt-1" style={{ color: theme.textDim }}>{pct.toFixed(0)}% da meta</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {[200,250,500].map(ml => (
+              <button key={ml} onClick={() => adicionar(ml)} className="py-4 rounded-xl font-medium transition"
+                style={{ background: theme.accent, color: "#fff" }}>
+                <IPlus size={16} className="inline mr-1" />{ml}ml
+              </button>
+            ))}
+          </div>
+
+          <div className="rounded-xl p-4 flex items-center justify-between" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+            <div>
+              <div className="text-xs uppercase tracking-[0.2em]" style={{ color: theme.textDim }}>meta diária</div>
+              <div className="text-lg font-semibold">{state.meta} ml</div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => ajustarMeta(-250)} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: theme.accentSoft, color: theme.accent }}>
+                <IMinus size={16} />
+              </button>
+              <button onClick={() => ajustarMeta(250)} className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: theme.accentSoft, color: theme.accent }}>
+                <IPlus size={16} />
+              </button>
+            </div>
+          </div>
+
+          {state.ingestoes.length > 0 && (
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.2em] mb-2" style={{ color: theme.textDim }}>hoje</h3>
+              <div className="space-y-1.5">
+                {[...state.ingestoes].reverse().map((ing,i) => {
+                  const idx = state.ingestoes.length - 1 - i;
+                  return (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg text-sm" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+                      <div className="flex items-center gap-2">
+                        <IDrop size={14} style={{ color: theme.accent }} />
+                        <span className="font-medium">{ing.ml} ml</span>
+                        <span className="text-xs" style={{ color: theme.textDim }}>às {ing.hora}</span>
+                      </div>
+                      <button onClick={() => remover(idx)} className="text-xs" style={{ color: theme.textDim }}>remover</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ────────── EXERCÍCIO ──────────
+    function Exercicio({ theme, state, setState }) {
+      const [tipo, setTipo] = useState("Corrida");
+      const [modoTimer, setModoTimer] = useState("progressivo");
+      const [metaMin, setMetaMin] = useState(30);
+      const [seconds, setSeconds] = useState(0);
+      const [running, setRunning] = useState(false);
+      const [distancia, setDistancia] = useState("");
+      const [manualMin, setManualMin] = useState("");
+      const intervalRef = useRef(null);
+
+      useEffect(() => {
+        if (!running) return;
+        intervalRef.current = setInterval(() => {
+          setSeconds(s => {
+            if (modoTimer === "regressivo") {
+              if (s <= 1) { clearInterval(intervalRef.current); setRunning(false); return 0; }
+              return s - 1;
+            }
+            return s + 1;
+          });
+        }, 1000);
+        return () => clearInterval(intervalRef.current);
+      }, [running, modoTimer]);
+
+      const iniciar = () => { setSeconds(modoTimer === "regressivo" ? metaMin * 60 : 0); setRunning(true); };
+      const parar = () => {
+        setRunning(false);
+        const duracao = modoTimer === "regressivo" ? (metaMin * 60 - seconds) : seconds;
+        if (duracao < 30) { alert("Sessão muito curta — não salva."); return; }
+        salvar(Math.floor(duracao / 60));
+        setSeconds(0);
+      };
+      const salvarManual = () => {
+        const m = parseInt(manualMin);
+        if (!m || m <= 0) { alert("Informe minutos válidos."); return; }
+        salvar(m); setManualMin("");
+      };
+      const salvar = (minutos) => {
+        const dist = parseFloat(distancia) || null;
+        setState(s => {
+          const novo = { tipo, duracao: minutos, distancia: dist, data: hoje(), timestamp: Date.now() };
+          const historico = [novo, ...s.historico].slice(0, 50);
+          let streak = 0;
+          const d = new Date();
+          const datas = new Set(historico.map(h => h.data));
+          while (datas.has(d.toISOString().slice(0,10))) { streak++; d.setDate(d.getDate()-1); }
+          return { ...s, historico, streak, ultimaData: hoje() };
+        });
+        setDistancia("");
+      };
+
+      const tiposList = ["Corrida","Caminhada","Musculação","Yoga","Natação","Outro"];
+
+      const semana = useMemo(() => {
+        const hoje0 = new Date(); hoje0.setHours(0,0,0,0);
+        const inicio = new Date(hoje0); inicio.setDate(inicio.getDate() - 6);
+        const itens = state.historico.filter(h => new Date(h.data + "T00:00:00") >= inicio);
+        const totalMin = itens.reduce((a,b) => a + b.duracao, 0);
+        const contagem = {};
+        itens.forEach(i => contagem[i.tipo] = (contagem[i.tipo] || 0) + 1);
+        const maisFreq = Object.entries(contagem).sort((a,b) => b[1] - a[1])[0];
+        return { totalMin, maisFreq: maisFreq ? maisFreq[0] : "—", nSessoes: itens.length };
+      }, [state.historico]);
+
+      return (
+        <div className="space-y-5">
+          <Titulo theme={theme} serifTxt="Exercício Físico" legenda="Movimento e resistência" />
+
+          <div>
+            <label className="text-xs uppercase tracking-[0.2em] mb-2 block" style={{ color: theme.textDim }}>Atividade</label>
+            <div className="grid grid-cols-3 gap-2">
+              {tiposList.map(t => (
+                <button key={t} onClick={() => setTipo(t)} className="py-2 rounded-lg text-sm font-medium transition"
+                  style={{ background: tipo === t ? theme.accent : theme.surface, color: tipo === t ? "#fff" : theme.text,
+                           border: `1px solid ${tipo === t ? theme.accent : theme.border}` }}>
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-2xl p-6 text-center"
+               style={{ background: running ? `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent2} 100%)` : theme.surface,
+                        border: `1px solid ${theme.border}`, color: running ? "#fff" : theme.text }}>
+            <div className="serif font-semibold tabular-nums" style={{ fontSize: "clamp(48px, 15vw, 72px)", lineHeight: 1, color: running ? "#fff" : theme.accent }}>
+              {fmtHHMMSS(seconds)}
+            </div>
+            <div className="text-xs uppercase tracking-[0.25em] mt-2" style={{ opacity: 0.8 }}>{tipo} · {modoTimer}</div>
+
+            {!running && (
+              <div className="flex gap-2 justify-center mt-3 text-xs">
+                <button onClick={() => setModoTimer("progressivo")} className="px-3 py-1 rounded-full"
+                        style={{ background: modoTimer === "progressivo" ? theme.accent : theme.accentSoft, color: modoTimer === "progressivo" ? "#fff" : theme.accent }}>Progressivo</button>
+                <button onClick={() => setModoTimer("regressivo")} className="px-3 py-1 rounded-full"
+                        style={{ background: modoTimer === "regressivo" ? theme.accent : theme.accentSoft, color: modoTimer === "regressivo" ? "#fff" : theme.accent }}>Regressivo</button>
+              </div>
+            )}
+
+            {!running && modoTimer === "regressivo" && (
+              <div className="mt-3 flex items-center justify-center gap-2 text-xs">
+                <span style={{ color: theme.textDim }}>Meta:</span>
+                <input type="number" min="1" value={metaMin} onChange={(e) => setMetaMin(parseInt(e.target.value) || 1)}
+                  className="w-16 p-1 rounded text-center" style={{ background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text }} />
+                <span style={{ color: theme.textDim }}>min</span>
+              </div>
+            )}
+
+            <div className="flex gap-2 justify-center mt-4">
+              {!running ? (
+                <button onClick={iniciar} className="px-5 py-2 rounded-full flex items-center gap-1.5 font-medium" style={{ background: theme.accent, color: "#fff" }}>
+                  <IPlay size={14} /> Iniciar
+                </button>
+              ) : (
+                <button onClick={parar} className="px-5 py-2 rounded-full flex items-center gap-1.5 font-medium" style={{ background: "rgba(255,255,255,0.25)", color: "#fff" }}>
+                  <ISquare size={14} /> Parar e salvar
+                </button>
+              )}
+            </div>
+          </div>
+
+          {(tipo === "Corrida" || tipo === "Caminhada") && (
+            <div>
+              <label className="text-xs uppercase tracking-[0.2em] mb-2 block" style={{ color: theme.textDim }}>
+                <IPin size={12} className="inline mr-1" /> Distância (km) — opcional
+              </label>
+              <input type="number" step="0.1" value={distancia} onChange={(e) => setDistancia(e.target.value)} placeholder="ex: 5.2"
+                className="w-full p-3 rounded-xl text-sm focus:outline-none"
+                style={{ background: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }} />
+            </div>
+          )}
+
+          <div className="rounded-xl p-4" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+            <div className="text-xs uppercase tracking-[0.2em] mb-2" style={{ color: theme.textDim }}>Registro manual</div>
+            <div className="flex gap-2">
+              <input type="number" min="1" value={manualMin} onChange={(e) => setManualMin(e.target.value)} placeholder="minutos"
+                className="flex-1 p-2.5 rounded-lg text-sm focus:outline-none"
+                style={{ background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text }} />
+              <button onClick={salvarManual} className="px-4 rounded-lg text-sm font-medium" style={{ background: theme.accent, color: "#fff" }}>Salvar</button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <StatBox theme={theme} label="sessões" valor={semana.nSessoes} />
+            <StatBox theme={theme} label="minutos" valor={semana.totalMin} />
+            <StatBox theme={theme} label="top" valor={semana.maisFreq} isText />
+          </div>
+
+          <div className="flex items-center justify-center gap-2 py-2">
+            <IFlame size={16} style={{ color: state.streak > 0 ? "#FF8A3D" : theme.textDim }} />
+            <span className="text-sm" style={{ color: theme.textDim }}>
+              <strong style={{ color: theme.text }}>{state.streak}</strong> dias consecutivos
+            </span>
+          </div>
+
+          {state.historico.length > 0 && (
+            <div>
+              <h3 className="text-xs uppercase tracking-[0.2em] mb-2" style={{ color: theme.textDim }}>últimas sessões</h3>
+              <div className="space-y-1.5">
+                {state.historico.slice(0,7).map((h,i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg text-sm" style={{ background: theme.surface, border: `1px solid ${theme.border}` }}>
+                    <div>
+                      <div className="font-medium">{h.tipo}</div>
+                      <div className="text-xs" style={{ color: theme.textDim }}>
+                        {formatoData(h.data)} · {h.duracao} min {h.distancia ? `· ${h.distancia} km` : ""}
+                      </div>
+                    </div>
+                    <IActivity size={16} style={{ color: theme.accent }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const StatBox = ({ theme, label, valor, isText }) => (
+      <div className="rounded-xl p-3 text-center" style={{ background: theme.accentSoft }}>
+        <div className={`serif font-semibold ${isText ? "text-sm pt-1.5" : "text-2xl"}`} style={{ color: theme.accent }}>{valor}</div>
+        <div className="text-[10px] uppercase tracking-wider mt-0.5" style={{ color: theme.textDim }}>{label}</div>
+      </div>
+    );
+
+    const Titulo = ({ theme, serifTxt, legenda }) => (
+      <div>
+        <h1 className="serif text-3xl font-semibold leading-tight">{serifTxt}</h1>
+        <div className="text-xs uppercase tracking-[0.25em] mt-1" style={{ color: theme.textDim }}>{legenda}</div>
+      </div>
+    );
+
+    // Renderizar
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<Polaris />);
+  </script>
+</body>
+</html>
